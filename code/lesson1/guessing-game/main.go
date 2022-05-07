@@ -1,12 +1,8 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"math/rand"
-	"os"
-	"strconv"
-	"strings"
 	"time"
 )
 
@@ -18,17 +14,21 @@ func main() {
 	fmt.Println("the secret number have been generated ")
 	for {
 		fmt.Println("please input your guess")
-		reader := bufio.NewReader(os.Stdin)
-		input, err := reader.ReadString('\n')
+		// reader := bufio.NewReader(os.Stdin)
+		// input, err := reader.ReadString('\n')
 
-		if err != nil {
-			fmt.Println("try again, err : ", err)
-			continue
-		}
+		// if err != nil {
+		// 	fmt.Println("try again, err : ", err)
+		// 	continue
+		// }
 
-		input = strings.TrimSuffix(input, "\r\n")
+		// input = strings.TrimSuffix(input, "\r\n")
 
-		guess, err := strconv.Atoi(input)
+		// guess, err := strconv.Atoi(input)
+
+		var guess int
+		_, err := fmt.Scanf("%d", &guess)
+
 		if err != nil {
 			fmt.Println("try again, err : ", err)
 			continue
