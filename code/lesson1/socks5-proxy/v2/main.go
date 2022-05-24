@@ -183,3 +183,5 @@ func connect(reader *bufio.Reader, conn net.Conn) (err error) {
 	<-ctx.Done()
 	return nil
 }
+
+// TODO : read again

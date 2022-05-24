@@ -63,7 +63,7 @@ func main(){
 }
 ```
 
-fmt的特殊情况
+### fmt的特殊情况
 - String()
 - Error()
 
@@ -156,7 +156,7 @@ func main() {
 
 ```
 
-io.reader
+### io.reader
 ```go
 package main
 
@@ -192,7 +192,7 @@ func main() {
 
 ```
 
-chan 管道 等价二叉查找树
+### chan 管道 等价二叉查找树
 ```go
 package main
 
@@ -243,6 +243,118 @@ func main() {
 ```
 
 
+### 锁的应用以及并发 `注意每个锁的释放必须被执行`
+```go
+
+package main
+
+import (
+	"fmt"
+	"sync"
+)
+
+type Fetcher interface {
+	// Fetch 返回 URL 的 body 内容，并且将在这个页面上找到的 URL 放到一个 slice 中。
+	Fetch(url string) (body string, urls []string, err error)
+}
+
+var fetched map[string]bool
+var mapMux sync.Mutex
+
+// Crawl 使用 fetcher 从某个 URL 开始递归的爬取页面，直到达到最大深度。
+func Crawl(url string, depth int, fetcher Fetcher) {
+	// TODO: 并行的抓取 URL。
+
+	// TODO: 不重复抓取页面。
+	// 下面并没有实现上面两种情况：
+	if depth <= 0 {
+		return
+	}
+	mapMux.Lock()
+
+	if fetched[url] == true {
+		mapMux.Unlock()   // this line is very important
+		return
+	}
+	fetched[url] = true
+	mapMux.Unlock()
+
+	body, urls, err := fetcher.Fetch(url)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Printf("found: %s %q\n", url, body)
+
+	var wg sync.WaitGroup
+	for _, u := range urls {
+		wg.Add(1)
+		go func(u string) {
+			Crawl(u, depth-1, fetcher)
+			wg.Done()
+		}(u)
+	}
+	wg.Wait()
+	return
+}
+
+func main() {
+	fetched = make(map[string]bool)
+	Crawl("https://golang.org/", 4, fetcher)
+}
+
+// fakeFetcher 是返回若干结果的 Fetcher。
+type fakeFetcher map[string]*fakeResult
+
+type fakeResult struct {
+	body string
+	urls []string
+}
+
+func (f fakeFetcher) Fetch(url string) (string, []string, error) {
+	if res, ok := f[url]; ok {
+		return res.body, res.urls, nil
+	}
+	return "", nil, fmt.Errorf("not found: %s", url)
+}
+
+// fetcher 是填充后的 fakeFetcher。
+var fetcher = fakeFetcher{
+	"https://golang.org/": &fakeResult{
+		"The Go Programming Language",
+		[]string{
+			"https://golang.org/pkg/",
+			"https://golang.org/cmd/",
+		},
+	},
+	"https://golang.org/pkg/": &fakeResult{
+		"Packages",
+		[]string{
+			"https://golang.org/",
+			"https://golang.org/cmd/",
+			"https://golang.org/pkg/fmt/",
+			"https://golang.org/pkg/os/",
+		},
+	},
+	"https://golang.org/pkg/fmt/": &fakeResult{
+		"Package fmt",
+		[]string{
+			"https://golang.org/",
+			"https://golang.org/pkg/",
+		},
+	},
+	"https://golang.org/pkg/os/": &fakeResult{
+		"Package os",
+		[]string{
+			"https://golang.org/",
+			"https://golang.org/pkg/",
+		},
+	},
+}
+
+```
+
+
 ### 实战
 - 猜数字游戏
 - 在线字典
@@ -250,7 +362,7 @@ func main() {
   - 观察network payload <curlconverter.com>
   - 观察network preview <oktools.net/json2go>
 - socks5代理
-![socks5代理原理](picture/socks5代理原理.jpg)
+![socks5代理原理](../picture/1socks5代理原理.jpg)
 
-![zuoye](lessson1课后作业.jpg)
+![zuoye](../picture/lessson1课后作业.jpg)
 
